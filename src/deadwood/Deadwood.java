@@ -2,9 +2,11 @@ package deadwood;
 
 import deadwood.board.*;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -180,6 +182,7 @@ public class Deadwood extends Application {
      */
     public static void takeRole(Role role) {
         getCurrentPlayer().setRole(role);
+        getCurrentPlayer().getRole().setPlayer(getCurrentPlayer());
         hasMoved = true;
     }
 
@@ -222,6 +225,7 @@ public class Deadwood extends Application {
             gameController.setPlayer(getCurrentPlayer());
             return ((Set) currentLocation).getShotsLeft();
         } else {
+            System.out.println("Warning: act called when player was not in a set");
             return -1;
         }
     }
@@ -235,22 +239,21 @@ public class Deadwood extends Application {
             List<Role> onCardRoles = ((Set) currentLocation).getCard().getRoles();
             List<Role> offCardRoles = ((Set) currentLocation).getRoles();
             for (Role onCardRole: onCardRoles) {
-                if (onCardRole.hasPlayer()) {
+                if (onCardRole.hasPlayer()) { //if at least one player is on card
                     int[] rolls = new int[((Set) currentLocation).getCard().getBudget()];
                     for (int i = 0; i < rolls.length; i++) {
                         rolls[i] = rand.nextInt(6) + 1;
                     }
                     Arrays.sort(rolls);
                     int[] payouts = new int[onCardRoles.size()];
-                    int budget = ((Set) currentLocation).getCard().getBudget();
-                    for (int i = budget - 1; i >= 0; i++) {
-                        payouts[((budget - i) % onCardRoles.size()) - 1] = rolls[i];
+                    for (int i = rolls.length - 1; i >= 0; i--) {
+                        payouts[((rolls.length - i - 1) % onCardRoles.size())] += rolls[i];
                     }
-                    for (int i = 0; i < onCardRoles.size(); i++) {
+                    for (int i = onCardRoles.size() - 1; i >= 0; i--) {
                         if (onCardRoles.get(i).hasPlayer()) {
                             Player player = onCardRoles.get(i).getPlayer();
                             player.clearPracticeChips();
-                            bank.payMoney(player, payouts[i]);
+                            bank.payMoney(player, payouts[onCardRoles.size() - i - 1]);
                         }
                     }
                     for (int i = 0; i < offCardRoles.size(); i++) {
@@ -260,6 +263,7 @@ public class Deadwood extends Application {
                             bank.payMoney(player, offCardRoles.get(i).getRequiredRank());
                         }
                     }
+                    gameController.setPlayer(getCurrentPlayer());
                     break;
                 }
             }
@@ -278,11 +282,23 @@ public class Deadwood extends Application {
             gameController.deleteCard(((Set) currentLocation).getCard());
             ((Set) currentLocation).setCard(null);;
             Board.finishScene();
+
             if (Board.getNumOfCards() <= 1) {
                 numOfDaysLeft--;
                 if (numOfDaysLeft <= 0) {
                     //end of game
-
+                    Player winner = null;
+                    int winnerScore = 0;
+                    for (Player player: players) {
+                        int playerScore = player.getMoney() + player.getCredits() + player.getRank() * 5;
+                        if (playerScore > winnerScore) {
+                            winner = player;
+                            winnerScore = playerScore;
+                        }
+                    }
+                    Alert winnerAlert = new Alert(Alert.AlertType.NONE, "Congrats, " + winner.getName() + "won!");
+                    winnerAlert.showAndWait();
+                    Platform.exit();
                 } else {
                     //start another day
                     startDay();

@@ -1,9 +1,7 @@
 package deadwood.board;
 
-import deadwood.Deadwood_CLI;
 import deadwood.Player;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 

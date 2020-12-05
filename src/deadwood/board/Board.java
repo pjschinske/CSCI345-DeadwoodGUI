@@ -108,12 +108,10 @@ public class Board {
     public static void dealCards() {
         List<Card> cardsTemp = new ArrayList<>(Board.cards.size());
         cardsTemp.addAll(cards);
-        System.out.println("# of cards: " + cardsTemp.size());
         Random rand = new Random();
         for (Set set: sets) {
             int cardIndex = rand.nextInt(cardsTemp.size());
             Card card = cardsTemp.get(cardIndex);
-            System.out.println(card.getName());
             set.setCard(cardsTemp.get(cardIndex));
             cardsTemp.remove(cardsTemp.get(cardIndex));
         }

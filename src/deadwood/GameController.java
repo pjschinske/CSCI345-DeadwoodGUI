@@ -110,6 +110,7 @@ public class GameController {
     private boolean canDrag;
     private double originalX;
     private double originalY;
+    private Place originalPlace;
     private double dragX;
     private double dragY;
 
@@ -232,6 +233,9 @@ public class GameController {
             dragX = currentPlayer.getLayoutX() - event.getSceneX();
             dragY = currentPlayer.getLayoutY() - event.getSceneY();
             currentPlayer.setCursor(Cursor.MOVE);
+            if (!Deadwood.hasMoved) {
+                originalPlace = Deadwood.getCurrentPlayer().getCurrentLocation();
+            }
         }
     }
 
@@ -240,83 +244,84 @@ public class GameController {
         Player currentPlayerData = Deadwood.getCurrentPlayer();
         ImageView currentPlayer = players.get(currentPlayerData);
         Place oldPlayerLocation = currentPlayerData.getCurrentLocation();
-        if (!Deadwood.hasMoved) {
-            List<Role> closeRoles = Deadwood.getCloseRoles();
-            boolean foundLocation = false, foundRole = false;
-            //check that player has moved to a neighboring
-            for (Map.Entry<Polygon, Place> entry : polygons.entrySet()) {
-                Polygon k = entry.getKey();
-                Place v = entry.getValue();
-                Point2D mouseLocation = k.sceneToLocal(event.getSceneX(), event.getSceneY());
-                if (k.contains(mouseLocation)) {
-                    if (oldPlayerLocation.getNeighbors().contains(v) ||
-                            oldPlayerLocation == v) {
-                        currentPlayerData.setCurrentLocation(v);
-                        foundLocation = true;
-                        takeRoleButton.setDisable(true);
-                        Deadwood.hasMoved = true;
-                    }
+        boolean foundLocation = false, foundRole = false;
+        List<Role> closeRoles = Deadwood.getCloseRoles();
+
+        //check that player has moved to a legal place
+        for (Map.Entry<Polygon, Place> entry : polygons.entrySet()) {
+            Polygon k = entry.getKey();
+            Place v = entry.getValue();
+            Point2D mouseLocation = k.sceneToLocal(event.getSceneX(), event.getSceneY());
+            if (k.contains(mouseLocation)) {
+                if (originalPlace.getNeighbors().contains(v) ||
+                        originalPlace == v) {
+                    currentPlayerData.setCurrentLocation(v);
+                    foundLocation = true;
+                    takeRoleButton.setDisable(true);
+                    Deadwood.hasMoved = true;
+                    break;
                 }
             }
-            if (foundLocation) {
-                //check all roles in the current location and neighboring locations
-                for (Role role: closeRoles) {
-                    double deltaX = event.getSceneX() - role.getSceneX();
-                    double deltaY = event.getSceneY() - role.getSceneY();
-                    if (deltaX >= 0 && deltaX <= role.getWidth() &&
-                            deltaY >= 0 && deltaY <= role.getHeight()) {
-                        foundRole = true;
-                        if (role.getRequiredRank() <= currentPlayerData.getRank()) {
-                            currentPlayer.setLayoutX(role.getSceneX());
-                            currentPlayer.setLayoutY(role.getSceneY());
-                            takeRoleButton.setDisable(false);
-                            currentRole = role;
-                            if (currentPlayerData.getCurrentLocation() instanceof Set) {
-                                viewCard(((Set) currentPlayerData.getCurrentLocation()).getCard());
-                            }
-                        } else {
-                            currentPlayer.setLayoutX(originalX);
-                            currentPlayer.setLayoutY(originalY);
-                            Deadwood.hasMoved = false;
-                            currentPlayerData.setCurrentLocation(oldPlayerLocation);
+        }
+        if (foundLocation) {
+            //check all roles in the current location and neighboring locations
+            for (Role role: closeRoles) {
+                double deltaX = event.getSceneX() - role.getSceneX();
+                double deltaY = event.getSceneY() - role.getSceneY();
+                if (deltaX >= 0 && deltaX <= role.getWidth() &&
+                        deltaY >= 0 && deltaY <= role.getHeight()) {
+                    foundRole = true;
+                    if (role.getRequiredRank() <= currentPlayerData.getRank()) {
+                        //player has moved to a legal role
+                        currentPlayer.setLayoutX(role.getSceneX());
+                        currentPlayer.setLayoutY(role.getSceneY());
+                        takeRoleButton.setDisable(false);
+                        currentRole = role;
+                        if (currentPlayerData.getCurrentLocation() instanceof Set) {
+                            viewCard(((Set) currentPlayerData.getCurrentLocation()).getCard());
                         }
-                        break;
+                    } else {
+                        //player has not moved to a legal Role
+                        currentPlayer.setLayoutX(originalX);
+                        currentPlayer.setLayoutY(originalY);
+                        Deadwood.hasMoved = false;
+                        currentPlayerData.setCurrentLocation(oldPlayerLocation);
                     }
+                    break;
                 }
-                if (!foundRole) {
-                    if (currentPlayerData.getCurrentLocation() instanceof Set) {
-                        viewCard(((Set) currentPlayerData.getCurrentLocation()).getCard());
-                    }
+            }
+            if (!foundRole) {
+                if (currentPlayerData.getCurrentLocation() instanceof Set) {
+                    viewCard(((Set) currentPlayerData.getCurrentLocation()).getCard());
                 }
-            } else {
-                currentPlayer.setLayoutX(originalX);
-                currentPlayer.setLayoutY(originalY);
-                currentPlayerData.setCurrentLocation(oldPlayerLocation);
-                Deadwood.hasMoved = false;
+                if (currentPlayerData.getRole() != null) {
+                    currentPlayerData.getRole().setPlayer(null);
+                }
+                currentPlayerData.setRole(null);
             }
         } else {
+            //player has not moved to a legal Place
             currentPlayer.setLayoutX(originalX);
             currentPlayer.setLayoutY(originalY);
             currentPlayerData.setCurrentLocation(oldPlayerLocation);
         }
         //Setup upgrade menu
-        if (Deadwood.hasMoved) {
-            if (currentPlayerData.getCurrentLocation().getName().equals("Casting Office")) {
-                switch (currentPlayerData.getRank()) {
-                    case 1:
-                        upgradeLevel.getItems().add(2);
-                    case 2:
-                        upgradeLevel.getItems().add(3);
-                    case 3:
-                        upgradeLevel.getItems().add(4);
-                    case 4:
-                        upgradeLevel.getItems().add(5);
-                    case 5:
-                        upgradeLevel.getItems().add(6);
-                }
-                upgradeLevel.setVisible(true);
-                upgradeWithMoneyButton.setDisable(false);
+        if (currentPlayerData.getCurrentLocation().getName().equals("Casting Office")) {
+            switch (currentPlayerData.getRank()) {
+                case 1:
+                    upgradeLevel.getItems().add(2);
+                case 2:
+                    upgradeLevel.getItems().add(3);
+                case 3:
+                    upgradeLevel.getItems().add(4);
+                case 4:
+                    upgradeLevel.getItems().add(5);
+                case 5:
+                    upgradeLevel.getItems().add(6);
             }
+            upgradeLevel.setVisible(true);
+            upgradeWithMoneyButton.setDisable(false);
+            upgradeWithCreditsButton.setDisable(false);
         }
         currentPlayer.setCursor(Cursor.HAND);
     }
@@ -339,15 +344,6 @@ public class GameController {
         }
     }
 
-//    @FXML private void moveLocation(MouseEvent event) {
-//        Object eventSource = event.getSource();
-//        if (eventSource instanceof Polygon) {
-//             if (((Polygon) eventSource).contains(((Polygon) eventSource).screenToLocal(event.getSceneX(), event.getSceneY()))) {
-//
-//             }
-//        }
-//    }
-
     void updateImage(Player player) {
         ImageView playerImage = players.get(player);
         playerImage.setImage(new Image(player.getImage()));
@@ -360,8 +356,13 @@ public class GameController {
         setPlayerCredits(player.getCredits());
         setPracticeChips(player.getPracticeChips());
         if (player.getRole() != null) {
+            takeRoleButton.setDisable(true);
             rehearseButton.setDisable(false);
             actButton.setDisable(false);
+        } else {
+            rehearseButton.setDisable(true);
+            actButton.setDisable(true);
+
         }
     }
 
@@ -524,6 +525,8 @@ public class GameController {
         rehearseButton.setDisable(true);
         actButton.setDisable(true);
         upgradeWithMoneyButton.setDisable(true);
+        upgradeWithCreditsButton.setDisable(true);
+        upgradeLevel.setVisible(false);
         Deadwood.endTurn();
     }
 }
