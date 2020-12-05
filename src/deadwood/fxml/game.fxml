@@ -226,12 +226,12 @@
             <Image url="@../img/shot.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="hotelTake1" fitHeight="47.0" fitWidth="47.0" layoutX="1111.0" layoutY="683.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="hotelTake2" fitHeight="47.0" fitWidth="47.0" layoutX="1058.0" layoutY="683.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../img/shot.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="hotelTake2" fitHeight="47.0" fitWidth="47.0" layoutX="1058.0" layoutY="683.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="hotelTake1" fitHeight="47.0" fitWidth="47.0" layoutX="1111.0" layoutY="683.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../img/shot.png" />
          </image>
