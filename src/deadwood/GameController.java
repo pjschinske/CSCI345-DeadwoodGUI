@@ -202,6 +202,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Resets all players to the trailers
+     */
     void resetPlayerLocation() {
         playerBlue.setLayoutX(1000);
         playerBlue.setLayoutY(310);
@@ -221,6 +224,9 @@ public class GameController {
         playerYellow.setLayoutY(385);
     }
 
+    /**
+     * Mouse down event for players
+     */
     @FXML private void onMousePressed(MouseEvent event) {
         ImageView currentPlayer = players.get(Deadwood.getCurrentPlayer());
         double deltaX = event.getSceneX() - currentPlayer.getLayoutX();
@@ -239,6 +245,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Mouse up event for players
+     */
     @FXML private void onMouseReleased(MouseEvent event) {
         canDrag = false;
         Player currentPlayerData = Deadwood.getCurrentPlayer();
@@ -326,6 +335,9 @@ public class GameController {
         currentPlayer.setCursor(Cursor.HAND);
     }
 
+    /**
+     * on mouse move while dragging
+     */
     @FXML private void onMouseDragged(MouseEvent event) {
         if (canDrag) {
             ImageView currentPlayer = players.get(Deadwood.getCurrentPlayer());
@@ -334,6 +346,9 @@ public class GameController {
         }
     }
 
+    /**
+     * on mouse entering a button
+     */
     @FXML private void onMouseEntered(MouseEvent event) {
         ImageView currentPlayer = players.get(Deadwood.getCurrentPlayer());
         double deltaX = event.getSceneX() - currentPlayer.getLayoutX();
@@ -344,11 +359,17 @@ public class GameController {
         }
     }
 
+    /**
+     * Update the player's die to reflect their rank
+     */
     void updateImage(Player player) {
         ImageView playerImage = players.get(player);
         playerImage.setImage(new Image(player.getImage()));
     }
 
+    /**
+     * Set current player fields on right side of screen
+     */
     void setPlayer(Player player) {
         setCurrentPlayerImage(player);
         setPlayerRank(player.getRank());
@@ -387,6 +408,9 @@ public class GameController {
         this.practiceChips.setText("" + practiceChips);
     }
 
+    /**
+     * setup cards at beginning of day
+     */
     void setCards() {
         List<Set> sets = Board.getSets();
         for (Set set: sets) {
@@ -446,6 +470,9 @@ public class GameController {
                 take.setVisible(false);
     }
 
+    /**
+     * Update the shot counter on a specific set
+     */
     void updateTakes(Set set) {
         ImageView[] currentTakes = null;
         switch (set.getName()) {
@@ -513,11 +540,13 @@ public class GameController {
     @FXML private void upgradeWithMoney() {
         int level = (int) upgradeLevel.getValue();
         Deadwood.upgradeWithMoney(level);
+        updateImage(Deadwood.getCurrentPlayer());
     }
 
     @FXML private void upgradeWithCredits() {
         int level = (int) upgradeLevel.getValue();
         Deadwood.upgradeWithCredits(level);
+        updateImage(Deadwood.getCurrentPlayer());
     }
 
     @FXML private void endTurn() {
